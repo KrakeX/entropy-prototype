@@ -1,0 +1,25 @@
+/* ── Design Tokens — ENTROPY ──────────────────────── */
+:root {
+  --surface:                  #131318;
+  --surface-lowest:           #0e0e13;
+  --surface-low:              #1b1b20;
+  --surface-container:        #1f1f25;
+  --surface-high:             #2a292f;
+  --surface-highest:          #35343a;
+  --on-surface:               #e4e1e9;
+  --on-surface-variant:       #bacac2;
+  --primary:                  #46f1c5;
+  --primary-container:        #00d4aa;
+  --on-primary:               #00382b;
+  --secondary:                #cebdff;
+  --secondary-container:      #4f319c;
+  --on-secondary-container:   #bea8ff;
+  --tertiary-container:       #ffa39c;
+  --error:                    #ffb4ab;
+  --error-container:          #93000a;
+  --outline-variant:          #3b4a44;
+  --outline:                  #85948d;
+  --font-headline: 'Space Grotesk', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-label: 'JetBrains Mono', monospace;
+}

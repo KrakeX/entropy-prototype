@@ -1,1 +1,53 @@
-/* Reset handled in App.svelte */
+/* ── Global Resets + Shared Utilities — ENTROPY ───── */
+@import './styles/tokens.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #131318;
+  color: #e4e1e9;
+  font-family: 'Manrope', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Shared Utility Classes ───────────────────────── */
+
+/* Used across TopNav, ChannelSidebar, ChatView, etc. */
+.icon-btn {
+  padding: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  transition: background 0.15s;
+}
+.icon-btn:hover {
+  background: var(--surface-highest);
+}
+.icon-btn-competition:hover {
+  color: var(--error);
+}
+
+/* Used in ServerCard + PublicServerList */
+.ping-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* ── Animations ───────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
