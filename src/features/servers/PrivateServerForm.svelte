@@ -1,6 +1,50 @@
 <script>
+  import { invoke } from '../../utils/tauri.js';
+  import { app } from '../../stores/app.svelte.js';
+
   let privateServerIP = $state('');
   let privateServerPort = $state('7700');
+  let connecting = $state(false);
+  let connectError = $state(null);
+
+  async function connect() {
+    if (!privateServerIP.trim()) return;
+
+    const portUdp = parseInt(privateServerPort) || 7700;
+    const portQuic = portUdp + 1; // por convención: signaling = voice + 1
+
+    connecting = true;
+    connectError = null;
+
+    try {
+      const info = await invoke('connect_to_node', {
+        ip: privateServerIP.trim(),
+        portUdp,
+        portQuic,
+      }, null);
+
+      if (info) {
+        // Conexión exitosa — entrar al servidor
+        app.addServerPanel = false;
+        app.currentView = 'channel';
+        app.currentServer = {
+          id: info.node_id,
+          name: `${privateServerIP}:${portUdp}`,
+          icon: '⚡',
+          type: 'private',
+          ip: privateServerIP,
+          port_udp: portUdp,
+          port_quic: portQuic,
+        };
+      } else {
+        connectError = 'Función solo disponible en la app de escritorio.';
+      }
+    } catch (e) {
+      connectError = e?.message ?? String(e);
+    } finally {
+      connecting = false;
+    }
+  }
 </script>
 
 <div class="private-form">
@@ -27,7 +71,16 @@
     </div>
     <p class="info-banner-text">Conexión directa cifrada E2E — Sin intermediarios, sin telemetría, sin datos biométricos.</p>
   </div>
-  <button class="connect-btn-full">CONECTAR AL SERVIDOR</button>
+  {#if connectError}
+    <div class="connect-error">
+      <span class="material-symbols-outlined" style="font-size:16px">error</span>
+      <span>{connectError}</span>
+    </div>
+  {/if}
+
+  <button class="connect-btn-full" onclick={connect} disabled={connecting}>
+    {connecting ? 'CONECTANDO...' : 'CONECTAR AL SERVIDOR'}
+  </button>
   <div class="form-footer">
     <div class="form-footer-badges">
       <div class="footer-badge"><div class="footer-dot"></div><span>RSA-4096 Active</span></div>
@@ -76,7 +129,15 @@
     font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase;
     transition: all 0.15s;
   }
-  .connect-btn-full:hover { background: var(--primary); }
+  .connect-btn-full:hover:not(:disabled) { background: var(--primary); }
+  .connect-btn-full:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .connect-error {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    padding: 12px 16px; background: rgba(179,38,30,0.1);
+    border: 1px solid rgba(179,38,30,0.3);
+    font-family: var(--font-label); font-size: 11px; color: var(--error);
+  }
 
   .form-footer {
     display: flex; justify-content: space-between; align-items: center;

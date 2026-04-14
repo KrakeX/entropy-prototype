@@ -12,7 +12,7 @@ use state::AppState;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(AppState::new("http://localhost:8080".to_string()))
+        .manage(AppState::new("http://localhost:7800".to_string()))
         .invoke_handler(tauri::generate_handler![
             // Connection
             connection::connect_to_node,

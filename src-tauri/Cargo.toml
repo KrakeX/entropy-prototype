@@ -22,19 +22,22 @@ tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
-# quinn = "0.11"  # TODO: add quinn when version conflicts resolve
+quinn = { version = "0.11", features = ["rustls"] }
+rustls = { version = "0.23", features = ["ring"] }
 cpal = "0.15"
 # audiopus = "0.2"  # TODO: add audiopus when libopus/autoconf is available on the build system
 x25519-dalek = { version = "2", features = ["static_secrets"] }
 aes-gcm = "0.10"
 rand = "0.8"
 uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dashmap = "6"
 anyhow = "1"
 thiserror = "2"
 reqwest = { version = "0.12", features = ["json"] }
+entropy-protocol = { path = "../../entropy-node-server/crates/entropy-protocol" }
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]
