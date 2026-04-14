@@ -2,6 +2,20 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 use crate::state::AppState;
 
+/// Respuesta exacta que devuelve el BFF en GET /servers
+#[derive(Debug, Deserialize)]
+struct BffConnectionInfo {
+    node_id: String,
+    address: String,
+    voice_port: u16,
+    signaling_port: u16,
+    region: String,
+    node_type: String,
+    status: String,
+    load_percent: u8,
+    estimated_latency_ms: Option<u32>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerInfo {
     pub id: String,
@@ -43,8 +57,41 @@ pub struct ServerDetails {
 pub async fn fetch_server_list(
     state: State<'_, AppState>,
 ) -> Result<Vec<ServerInfo>, String> {
-    tracing::info!("Fetching server list from BFF: {}", state.bff_url);
-    Err("not implemented".to_string())
+    let url = format!("{}/servers", state.bff_url);
+    tracing::info!("Fetching server list from BFF: {}", url);
+
+    let response = reqwest::get(&url)
+        .await
+        .map_err(|e| format!("HTTP request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(format!("BFF returned {status}: {body}"));
+    }
+
+    let nodes: Vec<BffConnectionInfo> = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse BFF response: {e}"))?;
+
+    let servers = nodes
+        .into_iter()
+        .map(|n| ServerInfo {
+            id: n.node_id.clone(),
+            name: format!("{} — {}", n.node_type, n.region),
+            region: n.region,
+            player_count: n.load_percent as u32,
+            max_players: 100,
+            ping_ms: n.estimated_latency_ms.unwrap_or(0),
+            server_type: n.node_type,
+            ip: n.address,
+            port_udp: n.voice_port,
+            port_quic: n.signaling_port,
+        })
+        .collect();
+
+    Ok(servers)
 }
 
 /// Obtiene los detalles de un servidor específico, incluyendo sus canales.

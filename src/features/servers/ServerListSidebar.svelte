@@ -1,12 +1,57 @@
 <script>
-  import { app, enterServer } from '../../stores/app.svelte.js';
-  import { servers } from '../../data/mock.js';
+  import { onMount } from 'svelte';
+  import { app } from '../../stores/app.svelte.js';
+  import { servers as mockServers } from '../../data/mock.js';
+  import { invoke } from '../../utils/tauri.js';
   import ServerCard from './ServerCard.svelte';
+
+  let servers = $state(mockServers);
+  let loading = $state(false);
+  let error = $state(null);
+
+  onMount(async () => {
+    loading = true;
+    error = null;
+    try {
+      const result = await invoke('fetch_server_list', {}, null);
+      if (result && result.length > 0) {
+        // Mapear campos del backend al shape que usa ServerCard
+        servers = result.map(s => ({
+          id: s.id,
+          name: s.name,
+          icon: s.region.toUpperCase().slice(0, 2),
+          type: s.server_type === 'Private' ? 'private' : 'public',
+          verified: s.server_type === 'Public',
+          members: s.player_count,
+          ping: s.ping_ms,
+          ip: s.ip,
+          port_udp: s.port_udp,
+          port_quic: s.port_quic,
+        }));
+      }
+      // Si result es null (modo web) o vacío, se mantiene mockServers
+    } catch (e) {
+      error = e?.message ?? String(e);
+    } finally {
+      loading = false;
+    }
+  });
 </script>
 
 <aside class="sidebar">
   <div class="sidebar-section-label">Mis Servidores</div>
   <div class="server-list">
+    {#if loading}
+      <div class="list-status">
+        <span class="material-symbols-outlined spin">sync</span>
+        <span>CONECTANDO...</span>
+      </div>
+    {:else if error}
+      <div class="list-status list-status-error">
+        <span class="material-symbols-outlined">cloud_off</span>
+        <span>SIN CONEXIÓN</span>
+      </div>
+    {/if}
     {#each servers as server}
       <ServerCard {server} isActive={app.currentServer?.id === server.id} />
     {/each}
@@ -56,6 +101,15 @@
     font-family: var(--font-label); font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;
   }
   .add-server-btn:hover { background: var(--surface-highest); }
+
+  .list-status {
+    display: flex; align-items: center; gap: 6px; padding: 10px 12px;
+    font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+    color: var(--on-surface-variant); opacity: 0.5;
+  }
+  .list-status-error { color: var(--error); opacity: 0.7; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; animation: spin 1s linear infinite; font-size: 16px; }
 
   .sidebar-user {
     margin-top: auto; padding: 12px 16px;
